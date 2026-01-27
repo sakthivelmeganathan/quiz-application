@@ -1,92 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+    <title>Quiz Application</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Application</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
-        .section { background: white; padding: 30px; border-radius: 10px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 5px; }
-        .btn:hover { background: #5a6fd8; }
-        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
-        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .btn { background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
+        .section { margin: 30px 0; }
+        .warning { background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0; }
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
     </style>
 </head>
 <body>
-    <div class="hero">
-        <h1>🎯 Online Quiz Application</h1>
-        <p>A full-stack web-based quiz system using Supabase</p>
-        <a href="https://github.com/sakthivelmeganathan/quiz-application" class="btn">📂 View Source Code</a>
-        <a href="https://github.com/sakthivelmeganathan/quiz-application/archive/refs/heads/master.zip" class="btn">⬇️ Download ZIP</a>
-    </div>
-    
-    <div class="warning">
-        <strong>⚠️ Important:</strong> This is a Node.js application that requires a server to run. It cannot run directly on GitHub Pages. Follow the setup instructions below to run it locally.
-    </div>
-    
-    <div class="section">
-        <h2>✨ Features</h2>
-        <ul>
-            <li>🔐 User registration and authentication via Supabase</li>
-            <li>⏱️ Timed quizzes with multiple choice questions</li>
-            <li>👨‍💼 Admin panel for quiz and question management</li>
-            <li>📊 Real-time scoring and detailed results</li>
-            <li>📱 Responsive design with modern glassmorphism UI</li>
-            <li>🔒 Row Level Security (RLS) for data protection</li>
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>🛠️ Technology Stack</h2>
-        <ul>
-            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES6+)</li>
-            <li><strong>Backend:</strong> Node.js, Express.js</li>
-            <li><strong>Database:</strong> Supabase (PostgreSQL)</li>
-            <li><strong>Authentication:</strong> Supabase Auth</li>
-            <li><strong>Security:</strong> Row Level Security policies</li>
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>🚀 Quick Setup</h2>
-        <ol>
-            <li><strong>Clone the repository:</strong><br>
-                <code>git clone https://github.com/sakthivelmeganathan/quiz-application.git</code></li>
-            <li><strong>Install dependencies:</strong><br>
-                <code>cd quiz-application && npm install</code></li>
-            <li><strong>Setup Supabase:</strong><br>
-                • Create a new project at <a href="https://supabase.com">supabase.com</a><br>
-                • Run the SQL commands from <code>database.sql</code><br>
-                • Update <code>.env</code> with your Supabase credentials</li>
-            <li><strong>Start the application:</strong><br>
-                <code>npm start</code></li>
-            <li><strong>Open in browser:</strong><br>
-                <code>http://localhost:3000</code></li>
-        </ol>
-    </div>
-    
-    <div class="section">
-        <h2>📋 Usage</h2>
-        <h3>For Users:</h3>
-        <ul>
-            <li>Register and login to access quizzes</li>
-            <li>Take timed quizzes with instant results</li>
-            <li>View your quiz history and performance</li>
-        </ul>
+    <div class="container">
+        <div class="header">
+            <h1>Online Quiz Application</h1>
+            <p>Full-stack quiz system with Supabase backend</p>
+            <a href="https://github.com/sakthivelmeganathan/quiz-application" class="btn">View on GitHub</a>
+        </div>
         
-        <h3>For Admins:</h3>
-        <ul>
-            <li>Create and manage quizzes</li>
-            <li>Add questions with multiple choice options</li>
-            <li>View all user results and analytics</li>
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>📄 License</h2>
-        <p>This project is for educational purposes.</p>
+        <div class="warning">
+            <strong>Important:</strong> This is a Node.js application that requires local setup. It cannot run on GitHub Pages.
+        </div>
+        
+        <div class="section">
+            <h2>Features</h2>
+            <ul>
+                <li>User authentication with Supabase</li>
+                <li>Timed multiple choice quizzes</li>
+                <li>Admin panel for quiz management</li>
+                <li>Real-time scoring and results</li>
+                <li>Modern responsive UI design</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Setup Instructions</h2>
+            <ol>
+                <li>Clone: <code>git clone https://github.com/sakthivelmeganathan/quiz-application.git</code></li>
+                <li>Install: <code>npm install</code></li>
+                <li>Setup Supabase project and update .env file</li>
+                <li>Run: <code>npm start</code></li>
+                <li>Open: <code>http://localhost:3000</code></li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <p><strong>Frontend:</strong> HTML, CSS, JavaScript</p>
+            <p><strong>Backend:</strong> Node.js, Express</p>
+            <p><strong>Database:</strong> Supabase (PostgreSQL)</p>
+        </div>
     </div>
 </body>
 </html>
