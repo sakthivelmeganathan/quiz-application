@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Quiz App</div>
+        <div class="nav-links">
+            <span id="userInfo"></span>
+            <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="form-container">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+                <p>Don't have an account? <a href="#" id="showRegister">Register here</a></p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page">
+            <div class="form-container">
+                <h2>Register</h2>
+                <form id="registerForm">
+                    <input type="text" id="registerName" placeholder="Full Name" required>
+                    <input type="email" id="registerEmail" placeholder="Email" required>
+                    <input type="password" id="registerPassword" placeholder="Password" required>
+                    <button type="submit" class="btn-primary">Register</button>
+                </form>
+                <p>Already have an account? <a href="#" id="showLogin">Login here</a></p>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="page">
+            <h2>Available Quizzes</h2>
+            <div id="quizList" class="quiz-grid"></div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="page">
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="quizzes">Manage Quizzes</button>
+                <button class="tab-btn" data-tab="results">View Results</button>
+            </div>
+            
+            <div id="quizzesTab" class="tab-content active">
+                <div class="admin-header">
+                    <h3>Quizzes</h3>
+                    <button id="addQuizBtn" class="btn-primary">Add Quiz</button>
+                </div>
+                <div id="adminQuizList"></div>
+            </div>
+            
+            <div id="resultsTab" class="tab-content">
+                <h3>All Results</h3>
+                <div id="allResults"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Taking Page -->
+        <div id="quizPage" class="page">
+            <div class="quiz-header">
+                <h3 id="quizTitle"></h3>
+                <div class="timer">Time: <span id="timer">00:00</span></div>
+            </div>
+            <div id="questionsContainer"></div>
+            <button id="submitQuizBtn" class="btn-primary">Submit Quiz</button>
+        </div>
+
+        <!-- Results Page -->
+        <div id="resultsPage" class="page">
+            <div class="results-container">
+                <h2>Quiz Results</h2>
+                <div id="scoreDisplay"></div>
+                <div id="answerReview"></div>
+                <button id="backToDashboard" class="btn-secondary">Back to Dashboard</button>
+            </div>
+        </div>
+
+        <!-- User Results History -->
+        <div id="historyPage" class="page">
+            <h2>Your Quiz History</h2>
+            <div id="userHistory"></div>
+            <button id="backFromHistory" class="btn-secondary">Back to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="quizModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add New Quiz</h3>
+            <form id="quizForm">
+                <input type="text" id="quizName" placeholder="Quiz Name" required>
+                <input type="number" id="timeLimit" placeholder="Time Limit (minutes)" required>
+                <input type="number" id="totalMarks" placeholder="Total Marks" required>
+                <button type="submit" class="btn-primary">Create Quiz</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="questionModal" class="modal">
+        <div class="modal-content question-modal">
+            <span class="close">&times;</span>
+            <h3><i class="icon-question">❓</i> Add New Question</h3>
+            <form id="questionForm">
+                <input type="hidden" id="questionQuizId">
+                
+                <div class="form-group">
+                    <label for="questionText">Question</label>
+                    <textarea id="questionText" placeholder="Enter your question here..." required rows="5"></textarea>
+                </div>
+
+                <div class="options-container">
+                    <label class="section-label">Answer Options</label>
+                    
+                    <div class="option-group">
+                        <div class="option-header">
+                            <span class="option-label">A</span>
+                            <input type="text" id="option1" placeholder="Enter option A" required>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <div class="option-header">
+                            <span class="option-label">B</span>
+                            <input type="text" id="option2" placeholder="Enter option B" required>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <div class="option-header">
+                            <span class="option-label">C</span>
+                            <input type="text" id="option3" placeholder="Enter option C" required>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <div class="option-header">
+                            <span class="option-label">D</span>
+                            <input type="text" id="option4" placeholder="Enter option D" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="correctOption">Correct Answer</label>
+                        <select id="correctOption" required>
+                            <option value="">Select correct option</option>
+                            <option value="1">A - Option 1</option>
+                            <option value="2">B - Option 2</option>
+                            <option value="3">C - Option 3</option>
+                            <option value="4">D - Option 4</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="marks">Points</label>
+                        <input type="number" id="marks" placeholder="1" value="1" min="1" max="10" required>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal(document.getElementById('questionModal'))">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="multipleQuestionsModal" class="modal">
+        <div class="modal-content multiple-questions-modal">
+            <span class="close">&times;</span>
+            <h3><i class="icon-questions">📝</i> Add Multiple Questions</h3>
+            
+            <!-- Step 1: Ask for number of questions -->
+            <div id="questionCountStep">
+                <div class="form-group">
+                    <label for="questionCount">How many questions do you want to add?</label>
+                    <input type="number" id="questionCount" min="1" max="50" value="5" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="app.closeModal(document.getElementById('multipleQuestionsModal'))">Cancel</button>
+                    <button type="button" class="btn-primary" onclick="app.generateQuestions()">Generate Questions</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Fill questions -->
+            <form id="multipleQuestionsForm" style="display: none;">
+                <input type="hidden" id="multipleQuizId">
+                <div id="multipleQuestionsContainer"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="app.backToQuestionCount()">Back</button>
+                    <button type="submit" class="btn-primary">Save All Questions</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
