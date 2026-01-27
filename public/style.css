@@ -57,7 +57,7 @@ body::before {
 }
 
 .page {
-    display: none;
+    display: none !important;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     border-radius: 20px;
@@ -67,7 +67,7 @@ body::before {
 }
 
 .page.active {
-    display: block;
+    display: block !important;
 }
 
 .form-container {
@@ -673,6 +673,32 @@ body::before {
     color: #721c24;
 }
 
+#questionCountStep {
+    text-align: center;
+    padding: 2rem;
+}
+
+#questionCountStep .form-group {
+    margin-bottom: 2rem;
+}
+
+#questionCountStep label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+#questionCountStep input {
+    width: 100px;
+    padding: 0.8rem;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: bold;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 0 0.5rem;
@@ -703,5 +729,19 @@ body::before {
     
     .tab-btn {
         text-align: left;
+    }
+    
+    .multiple-questions-modal {
+        width: 95%;
+        margin: 2% auto;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .question-footer {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
