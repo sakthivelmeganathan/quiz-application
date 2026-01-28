@@ -295,6 +295,7 @@ class QuizApp {
                 <div class="admin-actions">
                     <button class="btn-success btn-small" onclick="app.addQuestion('${quiz.id}')">Add Question</button>
                     <button class="btn-primary btn-small" onclick="app.addMultipleQuestions('${quiz.id}')">Add Multiple</button>
+                    <button class="btn-secondary btn-small" onclick="app.printQuiz('${quiz.id}')">Print</button>
                     <button class="btn-danger btn-small" onclick="app.deleteQuiz('${quiz.id}')">Delete</button>
                 </div>
             </div>
@@ -705,6 +706,106 @@ class QuizApp {
         a.download = filename;
         a.click();
         window.URL.revokeObjectURL(url);
+    }
+
+    async printQuiz(quizId) {
+        try {
+            const [quiz, questions] = await Promise.all([
+                this.apiCall('/quizzes').then(quizzes => quizzes.find(q => q.id === quizId)),
+                this.apiCall(`/quizzes/${quizId}/questions`)
+            ]);
+
+            const printContent = this.generatePrintableQuiz(quiz, questions);
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        } catch (error) {
+            this.showAlert('Error generating printable quiz', 'error');
+        }
+    }
+
+    generatePrintableQuiz(quiz, questions) {
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${quiz.quiz_name} - Printable Quiz</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                    .quiz-info { background: #f5f5f5; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+                    .question { margin-bottom: 25px; page-break-inside: avoid; }
+                    .question-number { font-weight: bold; color: #333; }
+                    .options { margin-left: 20px; margin-top: 10px; }
+                    .option { margin-bottom: 8px; }
+                    .answer-sheet { margin-top: 30px; border-top: 2px solid #333; padding-top: 20px; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>${quiz.quiz_name}</h1>
+                    <p>Quiz Assessment</p>
+                </div>
+                
+                <div class="quiz-info">
+                    <p><strong>Instructions:</strong></p>
+                    <ul>
+                        <li>Time Limit: ${quiz.time_limit} minutes</li>
+                        <li>Total Marks: ${quiz.total_marks}</li>
+                        <li>Total Questions: ${questions.length}</li>
+                        <li>Choose the best answer for each question</li>
+                        <li>Mark your answers clearly in the answer sheet below</li>
+                    </ul>
+                </div>
+
+                <div class="questions">
+                    ${questions.map((q, index) => `
+                        <div class="question">
+                            <div class="question-number">Question ${index + 1}. (${q.marks || 1} mark${(q.marks || 1) > 1 ? 's' : ''})</div>
+                            <p><strong>${q.question_text}</strong></p>
+                            <div class="options">
+                                <div class="option">A) ${q.option1}</div>
+                                <div class="option">B) ${q.option2}</div>
+                                <div class="option">C) ${q.option3}</div>
+                                <div class="option">D) ${q.option4}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="answer-sheet">
+                    <h3>Answer Sheet</h3>
+                    <p>Fill in your answers below:</p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #ddd; padding: 8px;">Question</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Answer (A/B/C/D)</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Question</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Answer (A/B/C/D)</th>
+                        </tr>
+                        ${Array.from({length: Math.ceil(questions.length/2)}, (_, i) => {
+                            const q1 = i * 2 + 1;
+                            const q2 = i * 2 + 2;
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${q1}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">____</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${q2 <= questions.length ? q2 : ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${q2 <= questions.length ? '____' : ''}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+                    <p>Name: _________________________ Date: _____________ Score: _____/${quiz.total_marks}</p>
+                </div>
+            </body>
+            </html>
+        `;
     }
 
     startTimer(seconds) {
