@@ -194,7 +194,7 @@ class QuizApp {
                         <span>✅ ${quiz.passing_score || 60}% to pass</span>
                     </div>
                     <div class="quiz-actions">
-                        <button class="${buttonClass}" ${buttonDisabled} ${clickHandler}>${buttonText}</button>
+                        ${alreadyTaken ? '' : `<button class="btn-primary" onclick="app.startQuiz('${quiz.id}')">Start Quiz</button>`}
                         <button class="btn-secondary" onclick="app.showQuizDetails('${quiz.id}')">Details</button>
                     </div>
                     ${alreadyTaken ? '<div class="quiz-status">✓ Completed</div>' : ''}
