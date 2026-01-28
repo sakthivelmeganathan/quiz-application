@@ -723,6 +723,34 @@ class QuizApp {
         window.URL.revokeObjectURL(url);
     }
 
+    showQuizDetails(quizId) {
+        const quiz = this.allQuizzes.find(q => q.id === quizId);
+        const userResult = this.userResults?.find(r => r.quiz_id === quizId);
+        
+        let detailsHTML = `
+            <h3>${quiz.quiz_name}</h3>
+            <p><strong>Category:</strong> ${quiz.category || 'General'}</p>
+            <p><strong>Difficulty:</strong> ${quiz.difficulty || 'Medium'}</p>
+            <p><strong>Time Limit:</strong> ${quiz.time_limit} minutes</p>
+            <p><strong>Total Marks:</strong> ${quiz.total_marks}</p>
+            <p><strong>Passing Score:</strong> ${quiz.passing_score || 60}%</p>
+            <p><strong>Description:</strong> ${quiz.description || 'No description available'}</p>
+        `;
+        
+        if (userResult) {
+            const percentage = Math.round((userResult.score / userResult.total_questions) * 100);
+            detailsHTML += `
+                <hr style="margin: 1rem 0;">
+                <h4>Your Result:</h4>
+                <p><strong>Score:</strong> ${userResult.score}/${userResult.total_questions}</p>
+                <p><strong>Percentage:</strong> ${percentage}%</p>
+                <p><strong>Date:</strong> ${new Date(userResult.date).toLocaleDateString()}</p>
+            `;
+        }
+        
+        alert(detailsHTML.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' '));
+    }
+
     async printQuiz(quizId) {
         try {
             const [quiz, questions] = await Promise.all([
