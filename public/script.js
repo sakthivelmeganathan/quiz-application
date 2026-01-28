@@ -4,6 +4,9 @@ class QuizApp {
         this.currentQuiz = null;
         this.quizTimer = null;
         this.timeLeft = 0;
+        this.currentQuestionIndex = 0;
+        this.flaggedQuestions = new Set();
+        this.allQuizzes = [];
         this.init();
     }
 
@@ -32,17 +35,27 @@ class QuizApp {
         document.getElementById('showLogin').addEventListener('click', () => this.showPage('loginPage'));
         document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
 
+        // Dashboard events
+        document.getElementById('viewHistoryBtn')?.addEventListener('click', () => this.showHistory());
+        document.getElementById('leaderboardBtn')?.addEventListener('click', () => this.showLeaderboard());
+        document.getElementById('searchQuiz')?.addEventListener('input', (e) => this.filterQuizzes(e.target.value));
+        document.getElementById('sortQuizzes')?.addEventListener('change', (e) => this.sortQuizzes(e.target.value));
+        document.getElementById('backFromLeaderboard')?.addEventListener('click', () => this.showDashboard());
+
         // Admin events
         document.getElementById('addQuizBtn').addEventListener('click', () => this.showModal('quizModal'));
         document.getElementById('quizForm').addEventListener('submit', (e) => this.handleCreateQuiz(e));
-        // Multiple questions form
         document.getElementById('multipleQuestionsForm').addEventListener('submit', (e) => this.handleMultipleQuestions(e));
         document.getElementById('questionForm').addEventListener('submit', (e) => this.handleAddQuestion(e));
+        document.getElementById('exportResultsBtn')?.addEventListener('click', () => this.exportResults());
 
         // Quiz events
         document.getElementById('submitQuizBtn').addEventListener('click', () => this.submitQuiz());
         document.getElementById('backToDashboard').addEventListener('click', () => this.showDashboard());
         document.getElementById('backFromHistory').addEventListener('click', () => this.showDashboard());
+        document.getElementById('prevQuestion')?.addEventListener('click', () => this.navigateQuestion(-1));
+        document.getElementById('nextQuestion')?.addEventListener('click', () => this.navigateQuestion(1));
+        document.getElementById('flagQuestion')?.addEventListener('click', () => this.flagCurrentQuestion());
 
         // Tab events
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -144,20 +157,116 @@ class QuizApp {
     async loadQuizzes() {
         try {
             const quizzes = await this.apiCall('/quizzes');
-            const container = document.getElementById('quizList');
-            
-            container.innerHTML = quizzes.map(quiz => `
-                <div class="quiz-card">
-                    <h4>${quiz.quiz_name}</h4>
-                    <p>Time Limit: ${quiz.time_limit} minutes</p>
-                    <p>Total Marks: ${quiz.total_marks}</p>
-                    <button class="btn-primary" onclick="app.startQuiz('${quiz.id}')">Start Quiz</button>
-                    <button class="btn-secondary" onclick="app.showHistory()">View History</button>
-                </div>
-            `).join('');
+            this.allQuizzes = quizzes;
+            this.displayQuizzes(quizzes);
         } catch (error) {
             // Error already handled in apiCall
         }
+    }
+
+    displayQuizzes(quizzes) {
+        const container = document.getElementById('quizList');
+        
+        container.innerHTML = quizzes.map(quiz => `
+            <div class="quiz-card">
+                <h4>${quiz.quiz_name}</h4>
+                <div class="quiz-meta">
+                    <span class="quiz-category">${quiz.category || 'General'}</span>
+                    <span class="quiz-difficulty ${(quiz.difficulty || 'Medium').toLowerCase()}">${quiz.difficulty || 'Medium'}</span>
+                </div>
+                <p>${quiz.description || 'No description available'}</p>
+                <div class="quiz-stats">
+                    <span>⏱️ ${quiz.time_limit} min</span>
+                    <span>📊 ${quiz.total_marks} marks</span>
+                    <span>✅ ${quiz.passing_score || 60}% to pass</span>
+                </div>
+                <div class="quiz-actions">
+                    <button class="btn-primary" onclick="app.startQuiz('${quiz.id}')">Start Quiz</button>
+                    <button class="btn-secondary" onclick="app.showQuizDetails('${quiz.id}')">Details</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    filterQuizzes(searchTerm) {
+        const filtered = this.allQuizzes.filter(quiz => 
+            quiz.quiz_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (quiz.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        this.displayQuizzes(filtered);
+    }
+
+    sortQuizzes(sortBy) {
+        let sorted = [...this.allQuizzes];
+        switch(sortBy) {
+            case 'newest':
+                sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                break;
+            case 'oldest':
+                sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                break;
+            case 'name':
+                sorted.sort((a, b) => a.quiz_name.localeCompare(b.quiz_name));
+                break;
+            case 'difficulty':
+                const difficultyOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
+                sorted.sort((a, b) => (difficultyOrder[a.difficulty] || 2) - (difficultyOrder[b.difficulty] || 2));
+                break;
+        }
+        this.displayQuizzes(sorted);
+    }
+
+    async showLeaderboard() {
+        try {
+            const results = await this.apiCall('/results');
+            const leaderboard = this.calculateLeaderboard(results);
+            this.displayLeaderboard(leaderboard);
+            this.showPage('leaderboardPage');
+        } catch (error) {
+            // Error already handled in apiCall
+        }
+    }
+
+    calculateLeaderboard(results) {
+        const userStats = {};
+        results.forEach(result => {
+            if (!userStats[result.user_id]) {
+                userStats[result.user_id] = {
+                    name: result.name,
+                    totalScore: 0,
+                    totalQuizzes: 0,
+                    bestScore: 0
+                };
+            }
+            const percentage = (result.score / result.total_questions) * 100;
+            userStats[result.user_id].totalScore += percentage;
+            userStats[result.user_id].totalQuizzes++;
+            userStats[result.user_id].bestScore = Math.max(userStats[result.user_id].bestScore, percentage);
+        });
+
+        return Object.values(userStats)
+            .map(user => ({
+                ...user,
+                averageScore: user.totalScore / user.totalQuizzes
+            }))
+            .sort((a, b) => b.averageScore - a.averageScore)
+            .slice(0, 10);
+    }
+
+    displayLeaderboard(leaderboard) {
+        const container = document.getElementById('leaderboardList');
+        container.innerHTML = leaderboard.map((user, index) => {
+            const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+            return `
+                <div class="leaderboard-item">
+                    <span class="rank ${rankClass}">${index + 1}</span>
+                    <div class="user-info">
+                        <h4>${user.name}</h4>
+                        <p>Average: ${user.averageScore.toFixed(1)}% | Best: ${user.bestScore.toFixed(1)}% | Quizzes: ${user.totalQuizzes}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     async loadAdminData() {
@@ -207,14 +316,23 @@ class QuizApp {
 
     async handleCreateQuiz(e) {
         e.preventDefault();
-        const quiz_name = document.getElementById('quizName').value;
-        const time_limit = document.getElementById('timeLimit').value;
-        const total_marks = document.getElementById('totalMarks').value;
+        const quizData = {
+            quiz_name: document.getElementById('quizName').value,
+            category: document.getElementById('quizCategory').value,
+            difficulty: document.getElementById('quizDifficulty').value,
+            time_limit: document.getElementById('timeLimit').value,
+            total_marks: document.getElementById('totalMarks').value,
+            passing_score: document.getElementById('passingScore').value,
+            description: document.getElementById('quizDescription').value,
+            randomize_questions: document.getElementById('randomizeQuestions').checked,
+            show_results: document.getElementById('showResults').checked,
+            allow_retake: document.getElementById('allowRetake').checked
+        };
 
         try {
             await this.apiCall('/quizzes', {
                 method: 'POST',
-                body: JSON.stringify({ quiz_name, time_limit, total_marks })
+                body: JSON.stringify(quizData)
             });
 
             this.closeModal(document.getElementById('quizModal'));
@@ -449,33 +567,144 @@ class QuizApp {
 
     displayQuiz() {
         document.getElementById('quizTitle').textContent = this.currentQuiz.quiz_name;
+        this.currentQuestionIndex = 0;
+        this.updateQuizProgress();
+        this.showCurrentQuestion();
+        this.showPage('quizPage');
+    }
+
+    showCurrentQuestion() {
         const container = document.getElementById('questionsContainer');
+        const question = this.currentQuiz.questions[this.currentQuestionIndex];
         
-        container.innerHTML = this.currentQuiz.questions.map((q, index) => `
+        container.innerHTML = `
             <div class="question">
-                <h4>Q${index + 1}. ${q.question_text}</h4>
+                <h4>Q${this.currentQuestionIndex + 1}. ${question.question_text}</h4>
                 <div class="options">
                     <label class="option">
-                        <input type="radio" name="q${q.id}" value="1">
-                        ${q.option1}
+                        <input type="radio" name="currentQuestion" value="1">
+                        ${question.option1}
                     </label>
                     <label class="option">
-                        <input type="radio" name="q${q.id}" value="2">
-                        ${q.option2}
+                        <input type="radio" name="currentQuestion" value="2">
+                        ${question.option2}
                     </label>
                     <label class="option">
-                        <input type="radio" name="q${q.id}" value="3">
-                        ${q.option3}
+                        <input type="radio" name="currentQuestion" value="3">
+                        ${question.option3}
                     </label>
                     <label class="option">
-                        <input type="radio" name="q${q.id}" value="4">
-                        ${q.option4}
+                        <input type="radio" name="currentQuestion" value="4">
+                        ${question.option4}
                     </label>
                 </div>
             </div>
-        `).join('');
+        `;
 
-        this.showPage('quizPage');
+        // Restore previous answer if exists
+        const savedAnswer = this.getSavedAnswer(question.id);
+        if (savedAnswer) {
+            const radio = container.querySelector(`input[value="${savedAnswer}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        // Update navigation buttons
+        document.getElementById('prevQuestion').disabled = this.currentQuestionIndex === 0;
+        document.getElementById('nextQuestion').disabled = this.currentQuestionIndex === this.currentQuiz.questions.length - 1;
+        
+        // Update flag button
+        const flagBtn = document.getElementById('flagQuestion');
+        const questionId = question.id;
+        flagBtn.textContent = this.flaggedQuestions.has(questionId) ? 'Unflag Question' : 'Flag Question';
+        flagBtn.className = this.flaggedQuestions.has(questionId) ? 'btn-warning active' : 'btn-warning';
+    }
+
+    updateQuizProgress() {
+        const progress = ((this.currentQuestionIndex + 1) / this.currentQuiz.questions.length) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressText').textContent = `${this.currentQuestionIndex + 1}/${this.currentQuiz.questions.length}`;
+        
+        // Update question numbers
+        const numbersContainer = document.getElementById('questionNumbers');
+        numbersContainer.innerHTML = this.currentQuiz.questions.map((q, index) => {
+            const classes = ['question-number'];
+            if (index === this.currentQuestionIndex) classes.push('current');
+            if (this.getSavedAnswer(q.id)) classes.push('answered');
+            if (this.flaggedQuestions.has(q.id)) classes.push('flagged');
+            
+            return `<span class="${classes.join(' ')}" onclick="app.goToQuestion(${index})">${index + 1}</span>`;
+        }).join('');
+    }
+
+    navigateQuestion(direction) {
+        this.saveCurrentAnswer();
+        this.currentQuestionIndex += direction;
+        this.currentQuestionIndex = Math.max(0, Math.min(this.currentQuestionIndex, this.currentQuiz.questions.length - 1));
+        this.showCurrentQuestion();
+        this.updateQuizProgress();
+    }
+
+    goToQuestion(index) {
+        this.saveCurrentAnswer();
+        this.currentQuestionIndex = index;
+        this.showCurrentQuestion();
+        this.updateQuizProgress();
+    }
+
+    flagCurrentQuestion() {
+        const questionId = this.currentQuiz.questions[this.currentQuestionIndex].id;
+        if (this.flaggedQuestions.has(questionId)) {
+            this.flaggedQuestions.delete(questionId);
+        } else {
+            this.flaggedQuestions.add(questionId);
+        }
+        this.showCurrentQuestion();
+        this.updateQuizProgress();
+    }
+
+    saveCurrentAnswer() {
+        const selected = document.querySelector('input[name="currentQuestion"]:checked');
+        if (selected) {
+            const questionId = this.currentQuiz.questions[this.currentQuestionIndex].id;
+            if (!this.currentQuiz.answers) this.currentQuiz.answers = {};
+            this.currentQuiz.answers[questionId] = parseInt(selected.value);
+        }
+    }
+
+    getSavedAnswer(questionId) {
+        return this.currentQuiz.answers ? this.currentQuiz.answers[questionId] : null;
+    }
+
+    exportResults() {
+        // Simple CSV export functionality
+        this.apiCall('/results').then(results => {
+            const csvContent = this.convertToCSV(results);
+            this.downloadCSV(csvContent, 'quiz_results.csv');
+        });
+    }
+
+    convertToCSV(data) {
+        const headers = ['Name', 'Quiz', 'Score', 'Total Questions', 'Percentage', 'Date'];
+        const rows = data.map(result => [
+            result.name,
+            result.quiz_name,
+            result.score,
+            result.total_questions,
+            Math.round((result.score / result.total_questions) * 100) + '%',
+            new Date(result.date).toLocaleDateString()
+        ]);
+        
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    downloadCSV(content, filename) {
+        const blob = new Blob([content], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
     startTimer(seconds) {
@@ -505,13 +734,8 @@ class QuizApp {
             clearInterval(this.quizTimer);
         }
 
-        const answers = {};
-        this.currentQuiz.questions.forEach(q => {
-            const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
-            if (selected) {
-                answers[q.id] = parseInt(selected.value);
-            }
-        });
+        this.saveCurrentAnswer();
+        const answers = this.currentQuiz.answers || {};
 
         try {
             const result = await this.apiCall('/submit-quiz', {

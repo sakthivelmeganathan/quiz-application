@@ -121,6 +121,188 @@
             font-size: 2rem; 
             cursor: pointer; 
         }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .quiz-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .quiz-filters input, .quiz-filters select {
+            flex: 1;
+            margin: 0;
+        }
+        .quiz-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.9);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card h4 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 30px;
+            position: relative;
+            min-width: 200px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+        }
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .question-numbers {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .question-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .question-number.current {
+            background: #667eea;
+        }
+        .question-number.answered {
+            background: #28a745;
+        }
+        .question-number.flagged {
+            background: #ffc107;
+            color: #000;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.9);
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .rank {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            min-width: 40px;
+        }
+        .rank.gold { color: #ffd700; }
+        .rank.silver { color: #c0c0c0; }
+        .rank.bronze { color: #cd7f32; }
+        .history-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .quiz-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .chart-container {
+            background: rgba(255,255,255,0.9);
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+        .results-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .quiz-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -162,7 +344,22 @@
 
         <!-- User Dashboard -->
         <div id="userDashboard" class="page">
-            <h2>Available Quizzes</h2>
+            <div class="dashboard-header">
+                <h2>Available Quizzes</h2>
+                <div class="dashboard-actions">
+                    <button id="viewHistoryBtn" class="btn-secondary">Quiz History</button>
+                    <button id="leaderboardBtn" class="btn-secondary">Leaderboard</button>
+                </div>
+            </div>
+            <div class="quiz-filters">
+                <input type="text" id="searchQuiz" placeholder="Search quizzes...">
+                <select id="sortQuizzes">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name">Name A-Z</option>
+                    <option value="difficulty">By Difficulty</option>
+                </select>
+            </div>
             <div id="quizList" class="quiz-grid"></div>
         </div>
 
@@ -171,19 +368,72 @@
             <div class="admin-tabs">
                 <button class="tab-btn active" data-tab="quizzes">Manage Quizzes</button>
                 <button class="tab-btn" data-tab="results">View Results</button>
+                <button class="tab-btn" data-tab="analytics">Analytics</button>
+                <button class="tab-btn" data-tab="users">Users</button>
             </div>
             
             <div id="quizzesTab" class="tab-content active">
                 <div class="admin-header">
                     <h3>Quizzes</h3>
-                    <button id="addQuizBtn" class="btn-primary">Add Quiz</button>
+                    <div class="admin-actions">
+                        <button id="importQuizBtn" class="btn-secondary">Import Quiz</button>
+                        <button id="addQuizBtn" class="btn-primary">Add Quiz</button>
+                    </div>
+                </div>
+                <div class="quiz-stats">
+                    <div class="stat-card">
+                        <h4 id="totalQuizzes">0</h4>
+                        <p>Total Quizzes</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 id="totalQuestions">0</h4>
+                        <p>Total Questions</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4 id="totalAttempts">0</h4>
+                        <p>Total Attempts</p>
+                    </div>
                 </div>
                 <div id="adminQuizList"></div>
             </div>
             
             <div id="resultsTab" class="tab-content">
-                <h3>All Results</h3>
+                <div class="results-header">
+                    <h3>All Results</h3>
+                    <div class="results-filters">
+                        <input type="text" id="searchResults" placeholder="Search by user or quiz...">
+                        <select id="filterByQuiz">
+                            <option value="">All Quizzes</option>
+                        </select>
+                        <button id="exportResultsBtn" class="btn-secondary">Export CSV</button>
+                    </div>
+                </div>
                 <div id="allResults"></div>
+            </div>
+            
+            <div id="analyticsTab" class="tab-content">
+                <h3>Analytics Dashboard</h3>
+                <div class="analytics-grid">
+                    <div class="chart-container">
+                        <h4>Quiz Performance</h4>
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>User Activity</h4>
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="usersTab" class="tab-content">
+                <div class="users-header">
+                    <h3>User Management</h3>
+                    <div class="users-stats">
+                        <span id="totalUsers">0 Users</span>
+                        <span id="activeUsers">0 Active</span>
+                    </div>
+                </div>
+                <div id="usersList"></div>
             </div>
         </div>
 
@@ -191,10 +441,24 @@
         <div id="quizPage" class="page">
             <div class="quiz-header">
                 <h3 id="quizTitle"></h3>
-                <div class="timer">Time: <span id="timer">00:00</span></div>
+                <div class="quiz-info">
+                    <div class="timer">Time: <span id="timer">00:00</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <span class="progress-text" id="progressText">0/0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="quiz-navigation">
+                <button id="prevQuestion" class="btn-secondary" disabled>Previous</button>
+                <div class="question-numbers" id="questionNumbers"></div>
+                <button id="nextQuestion" class="btn-secondary">Next</button>
             </div>
             <div id="questionsContainer"></div>
-            <button id="submitQuizBtn" class="btn-primary">Submit Quiz</button>
+            <div class="quiz-actions">
+                <button id="flagQuestion" class="btn-warning">Flag Question</button>
+                <button id="submitQuizBtn" class="btn-primary">Submit Quiz</button>
+            </div>
         </div>
 
         <!-- Results Page -->
@@ -207,9 +471,39 @@
             </div>
         </div>
 
+        <!-- Leaderboard Page -->
+        <div id="leaderboardPage" class="page">
+            <div class="leaderboard-header">
+                <h2>🏆 Leaderboard</h2>
+                <select id="leaderboardFilter">
+                    <option value="all">All Time</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            <div id="leaderboardList"></div>
+            <button id="backFromLeaderboard" class="btn-secondary">Back to Dashboard</button>
+        </div>
+
         <!-- User Results History -->
         <div id="historyPage" class="page">
-            <h2>Your Quiz History</h2>
+            <div class="history-header">
+                <h2>Your Quiz History</h2>
+                <div class="history-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalAttempted">0</span>
+                        <span class="stat-label">Quizzes Taken</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="averageScore">0%</span>
+                        <span class="stat-label">Average Score</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="bestScore">0%</span>
+                        <span class="stat-label">Best Score</span>
+                    </div>
+                </div>
+            </div>
             <div id="userHistory"></div>
             <button id="backFromHistory" class="btn-secondary">Back to Dashboard</button>
         </div>
@@ -221,9 +515,62 @@
             <span class="close">&times;</span>
             <h3>Add New Quiz</h3>
             <form id="quizForm">
-                <input type="text" id="quizName" placeholder="Quiz Name" required>
-                <input type="number" id="timeLimit" placeholder="Time Limit (minutes)" required>
-                <input type="number" id="totalMarks" placeholder="Total Marks" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quiz Name</label>
+                        <input type="text" id="quizName" placeholder="Quiz Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="quizCategory">
+                            <option value="General">General Knowledge</option>
+                            <option value="Science">Science</option>
+                            <option value="History">History</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Arts">Arts & Literature</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Time Limit (minutes)</label>
+                        <input type="number" id="timeLimit" placeholder="30" min="1" max="180" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select id="quizDifficulty">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Total Marks</label>
+                        <input type="number" id="totalMarks" placeholder="100" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Passing Score (%)</label>
+                        <input type="number" id="passingScore" placeholder="60" min="1" max="100" value="60">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="quizDescription" placeholder="Brief description of the quiz..." rows="3"></textarea>
+                </div>
+                <div class="quiz-settings">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="randomizeQuestions"> Randomize Questions
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showResults"> Show Results Immediately
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="allowRetake"> Allow Retake
+                    </label>
+                </div>
                 <button type="submit" class="btn-primary">Create Quiz</button>
             </form>
         </div>
