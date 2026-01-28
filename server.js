@@ -7,7 +7,20 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static('public'));
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Explicit routes for static assets
+app.get('/style.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'public', 'style.css'));
+});
+
+app.get('/script.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'public', 'script.js'));
+});
 
 // Serve the main page
 app.get('/', (req, res) => {
