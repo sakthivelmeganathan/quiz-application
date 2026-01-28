@@ -44,7 +44,9 @@ class QuizApp {
 
         // Admin events
         document.getElementById('addQuizBtn').addEventListener('click', () => this.showModal('quizModal'));
+        document.getElementById('importQuizBtn')?.addEventListener('click', () => this.showModal('importQuizModal'));
         document.getElementById('quizForm').addEventListener('submit', (e) => this.handleCreateQuiz(e));
+        document.getElementById('importQuizForm')?.addEventListener('submit', (e) => this.handleImportQuiz(e));
         document.getElementById('multipleQuestionsForm').addEventListener('submit', (e) => this.handleMultipleQuestions(e));
         document.getElementById('questionForm').addEventListener('submit', (e) => this.handleAddQuestion(e));
         document.getElementById('exportResultsBtn')?.addEventListener('click', () => this.exportResults());
@@ -806,6 +808,66 @@ class QuizApp {
             </body>
             </html>
         `;
+    }
+
+    async handleImportQuiz(e) {
+        e.preventDefault();
+        
+        let quizData;
+        const file = document.getElementById('importFile').files[0];
+        const textData = document.getElementById('importData').value.trim();
+        
+        try {
+            if (file) {
+                const text = await file.text();
+                quizData = JSON.parse(text);
+            } else if (textData) {
+                quizData = JSON.parse(textData);
+            } else {
+                throw new Error('Please select a file or paste JSON data');
+            }
+            
+            // Create quiz
+            const quiz = await this.apiCall('/quizzes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    quiz_name: quizData.quiz_name,
+                    category: quizData.category || 'General',
+                    difficulty: quizData.difficulty || 'Medium',
+                    time_limit: quizData.time_limit,
+                    total_marks: quizData.total_marks,
+                    passing_score: quizData.passing_score || 60,
+                    description: quizData.description || ''
+                })
+            });
+            
+            // Add questions
+            if (quizData.questions && quizData.questions.length > 0) {
+                for (const question of quizData.questions) {
+                    await this.apiCall('/questions', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            quiz_id: quiz.quiz_id,
+                            question_text: question.question_text,
+                            option1: question.option1,
+                            option2: question.option2,
+                            option3: question.option3,
+                            option4: question.option4,
+                            correct_option: question.correct_option,
+                            marks: question.marks || 1
+                        })
+                    });
+                }
+            }
+            
+            this.closeModal(document.getElementById('importQuizModal'));
+            this.loadAdminData();
+            this.showAlert(`Quiz imported successfully with ${quizData.questions?.length || 0} questions!`, 'success');
+            document.getElementById('importQuizForm').reset();
+            
+        } catch (error) {
+            this.showAlert('Invalid JSON format or import failed: ' + error.message, 'error');
+        }
     }
 
     startTimer(seconds) {
