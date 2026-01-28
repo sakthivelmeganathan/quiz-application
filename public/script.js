@@ -158,8 +158,12 @@ class QuizApp {
 
     async loadQuizzes() {
         try {
-            const quizzes = await this.apiCall('/quizzes');
+            const [quizzes, userResults] = await Promise.all([
+                this.apiCall('/quizzes'),
+                this.apiCall('/results')
+            ]);
             this.allQuizzes = quizzes;
+            this.userResults = userResults;
             this.displayQuizzes(quizzes);
         } catch (error) {
             // Error already handled in apiCall
@@ -169,25 +173,34 @@ class QuizApp {
     displayQuizzes(quizzes) {
         const container = document.getElementById('quizList');
         
-        container.innerHTML = quizzes.map(quiz => `
-            <div class="quiz-card">
-                <h4>${quiz.quiz_name}</h4>
-                <div class="quiz-meta">
-                    <span class="quiz-category">${quiz.category || 'General'}</span>
-                    <span class="quiz-difficulty ${(quiz.difficulty || 'Medium').toLowerCase()}">${quiz.difficulty || 'Medium'}</span>
+        container.innerHTML = quizzes.map(quiz => {
+            const alreadyTaken = this.userResults?.some(result => result.quiz_id === quiz.id);
+            const buttonText = alreadyTaken ? 'Already Taken' : 'Start Quiz';
+            const buttonClass = alreadyTaken ? 'btn-secondary' : 'btn-primary';
+            const buttonDisabled = alreadyTaken ? 'disabled' : '';
+            const clickHandler = alreadyTaken ? '' : `onclick="app.startQuiz('${quiz.id}')"`;
+            
+            return `
+                <div class="quiz-card ${alreadyTaken ? 'completed' : ''}">
+                    <h4>${quiz.quiz_name}</h4>
+                    <div class="quiz-meta">
+                        <span class="quiz-category">${quiz.category || 'General'}</span>
+                        <span class="quiz-difficulty ${(quiz.difficulty || 'Medium').toLowerCase()}">${quiz.difficulty || 'Medium'}</span>
+                    </div>
+                    <p>${quiz.description || 'No description available'}</p>
+                    <div class="quiz-stats">
+                        <span>⏱️ ${quiz.time_limit} min</span>
+                        <span>📊 ${quiz.total_marks} marks</span>
+                        <span>✅ ${quiz.passing_score || 60}% to pass</span>
+                    </div>
+                    <div class="quiz-actions">
+                        <button class="${buttonClass}" ${buttonDisabled} ${clickHandler}>${buttonText}</button>
+                        <button class="btn-secondary" onclick="app.showQuizDetails('${quiz.id}')">Details</button>
+                    </div>
+                    ${alreadyTaken ? '<div class="quiz-status">✓ Completed</div>' : ''}
                 </div>
-                <p>${quiz.description || 'No description available'}</p>
-                <div class="quiz-stats">
-                    <span>⏱️ ${quiz.time_limit} min</span>
-                    <span>📊 ${quiz.total_marks} marks</span>
-                    <span>✅ ${quiz.passing_score || 60}% to pass</span>
-                </div>
-                <div class="quiz-actions">
-                    <button class="btn-primary" onclick="app.startQuiz('${quiz.id}')">Start Quiz</button>
-                    <button class="btn-secondary" onclick="app.showQuizDetails('${quiz.id}')">Details</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     filterQuizzes(searchTerm) {
